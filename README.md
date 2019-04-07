@@ -10,4 +10,4 @@ not subject to any warranty, implicit or explicit.
 ## kallisto.py
 This code was written to run single-end RNA-Seq data through the
 kallisto pipeline. It was written at the beginning of my MSc thesis
-in bioinformatics, done at Wageningen University in Wageningen, Netherlands.
+in bioinformatics, done at (https://www.wur.nl/en/Research-Results/Chair-grous/Plant-Sciences/Bioinformatics.htm "Wageningen University") in Wageningen, Netherlands.
