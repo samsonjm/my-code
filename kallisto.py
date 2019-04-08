@@ -2,8 +2,8 @@
 """
 Author: Jonathan Samson
 
-A script to take RNA-seq data and run it through kallisto and sleuth to give
-data to be interpreted.
+A script to take RNA-seq data and run it through kallisto to prepare it for
+sleuth.
 
 Keyword Arguments:
 argv[1] -- the kallisto directory
@@ -25,7 +25,8 @@ def gen_file_list(input_directory, output_file):
 
     Keyword Arguments:
     input_directory -- The directory that the RNA-seq files are stored (in
-        .fastq or .fastq.gz format)
+        .fastq or .fastq.gz format).
+    output_file -- The file to output the RNA-seq filenames to.
     """
     try:
         if not os.path.exists(output_file):
