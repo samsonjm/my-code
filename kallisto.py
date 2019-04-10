@@ -2,8 +2,8 @@
 """
 Author: Jonathan Samson
 
-A script to take RNA-seq data and run it through kallisto to prepare it for
-sleuth.
+A script to take RNA-seq data and run it through kallisto to prepare it
+for sleuth.
 
 Keyword Arguments:
 argv[1] -- the kallisto directory
@@ -22,8 +22,8 @@ def gen_file_list(input_directory, output_file):
     """ Creates a file with the names of all the RNA-seq files.
 
     Keyword Arguments:
-    input_directory -- The directory that the RNA-seq files are stored (in
-        .fastq or .fastq.gz format).
+    input_directory -- The directory that the RNA-seq files are stored
+        (in .fastq or .fastq.gz format).
     output_file -- The file to output the RNA-seq filenames to.
     """
     try:
@@ -38,26 +38,29 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
     """ Runs kallisto quant on each raw read file.
 
     Keyword Arguments:
-        wrk_dir -- The kallisto directory to output to, containing the index
+        wrk_dir -- The kallisto directory containing the index
         raw_file -- The file containing a list of raw read file names
         conversion -- Dictionary containing read_name: sample_name
         raws -- Directory with raw read files
     """
     for line in raw_file:
-        reg = re.search(r"(\w*)_(\w{6}(-\w*)*)(-|\_)\w{8}-\w{8}\_(\w*)\_\w*\.fastq.*",\
+        reg = re.search(
+                r"(\w*)_(\w{6}(-\w*)*)(-|\_)\w{8}-\w{8}\_(\w*)\_\w*\.fastq.*",\
                                line)
         run_name = reg.group(2)
         out_folder = conversion[run_name]
         try:
             if not os.path.exists(wrk_dir + out_folder):
-                # Standard deviation (-s 30) is from community forum posts.
-                # Length is from "Protocol for use with NEBNext Ultra
-                # Directional RNA Library Prep Kit for Illumina".  Company claims to use
-                # this protocol, and doesn't site any deviations from typical (though the
-                # protocol has addendums for different fragment lengths).
-                cmd = ('kallisto quant -t 20 -i ' + wrk_dir + '/411index --single '+\
-                    "-l 200 -s 30 -b 100 -o " + wrk_dir + out_folder +\
-                    " " + raws + "*" + run_name + "*")
+                # Standard deviation (-s 30) is from community forum
+                # posts.  Length is from "Protocol for use with NEBNext
+                # Ultra Directional RNA Library Prep Kit for Illumina".
+                # Company claims to use this protocol, and doesn't site
+                # any deviations from typical (though the protocol has
+                # addendums for different fragment lengths).
+                cmd = ('kallisto quant -t 20 -i ' + wrk_dir +
+                       '/411index --single '+\
+                       "-l 200 -s 30 -b 100 -o " + wrk_dir + out_folder +\
+                       " " + raws + "*" + run_name + "*")
                 subprocess.check_call(cmd, shell=True)
         except IOError:
             print("Error in run_kallisto_quant; the output file for " +\
