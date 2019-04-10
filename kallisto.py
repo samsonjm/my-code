@@ -50,12 +50,11 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
         out_folder = conversion[run_name]
         try:
             if not os.path.exists(wrk_dir + out_folder):
-                """ Standard deviation (-s 30) is from community forum posts.
-                Length is from "Protocol for use with NEBNext Ultra
-                Directional RNA Library Prep Kit for Illumina".  Company claims to use
-                this protocol, and doesn't site any deviations from typical (though the
-                protocol has addendums for different fragment lengths).
-                """
+                # Standard deviation (-s 30) is from community forum posts.
+                # Length is from "Protocol for use with NEBNext Ultra
+                # Directional RNA Library Prep Kit for Illumina".  Company claims to use
+                # this protocol, and doesn't site any deviations from typical (though the
+                # protocol has addendums for different fragment lengths).
                 cmd = ('kallisto quant -t 20 -i ' + wrk_dir + '/411index --single '+\
                     "-l 200 -s 30 -b 100 -o " + wrk_dir + out_folder +\
                     " " + raws + "*" + run_name + "*")
