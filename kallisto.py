@@ -18,6 +18,7 @@ import re
 import subprocess
 import os.path
 
+
 def gen_file_list(input_directory, output_file):
     """ Creates a file with the names of all the RNA-seq files.
 
@@ -29,24 +30,26 @@ def gen_file_list(input_directory, output_file):
     try:
         if not os.path.exists(output_file):
             cmd = 'ls {}*.fastq* > {}'.format(input_directory, output_file)
-            subprocess.check_call(cmd, shell=True)
     except IOError:
         print("Error in gen_file_list; the file already exists. " +
               "\nContinuing with the previously-generated file")
+    else:
+        subprocess.check_call(cmd, shell=True)
+
 
 def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
     """ Runs kallisto quant on each raw read file.
 
     Keyword Arguments:
-        wrk_dir -- The kallisto directory containing the index
-        raw_file -- The file containing a list of raw read file names
-        conversion -- Dictionary containing read_name: sample_name
-        raws -- Directory with raw read files
+        wrk_dir -- The kallisto directory containing the index.
+        raw_file -- The file containing a list of raw read file names.
+        conversion -- Dictionary containing read_name: sample_name.
+        raws -- Directory with raw read files.
     """
     for line in raw_file:
         reg = re.search(
-                r"(\w*)_(\w{6}(-\w*)*)(-|\_)\w{8}-\w{8}\_(\w*)\_\w*\.fastq.*",
-                line)
+            r"(\w*)_(\w{6}(-\w*)*)(-|\_)\w{8}-\w{8}\_(\w*)\_\w*\.fastq.*",
+            line)
         run_name = reg.group(2)
         out_folder = conversion[run_name]
         try:
@@ -57,25 +60,26 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
                 # Company claims to use this protocol, and doesn't site
                 # any deviations from typical (though the protocol has
                 # addendums for different fragment lengths).
-                cmd = ('kallisto quant -t 20 -i ' + wrk_dir +
-                       '/411index --single '+
+                cmd = ("kallisto quant -t 20 -i " + wrk_dir +
+                       "/411index --single "+
                        "-l 200 -s 30 -b 100 -o " + wrk_dir + out_folder +
                        " " + raws + "*" + run_name + "*")
-                subprocess.check_call(cmd, shell=True)
         except IOError:
             print("Error in run_kallisto_quant; the output file for " +
                   "{} already exists. Continuing with".format(out_folder) +
                   "previously generated file.")
+        else:
+            subprocess.check_call(cmd, shell=True)
+
 
 def main():
-    """This function is run when the file is called.
-    """
+    """ Runs when the module is called. """
     # Define variables
-    raw_files = "./seq_files" # A file to hold raw read file names
-    sample_names = {} # A dictionary of filenames: samplenames
-    kallisto_dir = argv[1] # The directory with the kallisto index
-    raw_dir = argv[2] # The directory with the raw read files
-    conv_file = argv[3] # The file with run_name,sample_name
+    raw_files = "./seq_files"  # A file to hold raw read file names
+    sample_names = {}  # A dictionary of filenames: samplenames
+    kallisto_dir = argv[1]  # The directory with the kallisto index
+    raw_dir = argv[2]  # The directory with the raw read files
+    conv_file = argv[3]  # The file with run_name,sample_name
 
     # Create a file holding the names of the raw file reads
     gen_file_list(raw_dir, raw_files)
@@ -92,6 +96,6 @@ def main():
     with open(raw_files) as raw_path:
         run_kallisto_quant(kallisto_dir, raw_path, sample_names, raw_dir)
 
-# Main executable
+
 if __name__ == "__main__":
     main()
