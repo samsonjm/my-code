@@ -31,7 +31,7 @@ def gen_file_list(input_directory, output_file):
             cmd = 'ls {}*.fastq* > {}'.format(input_directory, output_file)
             subprocess.check_call(cmd, shell=True)
     except IOError:
-        print("Error in gen_file_list; the file already exists. " +\
+        print("Error in gen_file_list; the file already exists. " +
               "\nContinuing with the previously-generated file")
 
 def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
@@ -45,8 +45,8 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
     """
     for line in raw_file:
         reg = re.search(
-                r"(\w*)_(\w{6}(-\w*)*)(-|\_)\w{8}-\w{8}\_(\w*)\_\w*\.fastq.*",\
-                               line)
+                r"(\w*)_(\w{6}(-\w*)*)(-|\_)\w{8}-\w{8}\_(\w*)\_\w*\.fastq.*",
+                line)
         run_name = reg.group(2)
         out_folder = conversion[run_name]
         try:
@@ -58,13 +58,13 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
                 # any deviations from typical (though the protocol has
                 # addendums for different fragment lengths).
                 cmd = ('kallisto quant -t 20 -i ' + wrk_dir +
-                       '/411index --single '+\
-                       "-l 200 -s 30 -b 100 -o " + wrk_dir + out_folder +\
+                       '/411index --single '+
+                       "-l 200 -s 30 -b 100 -o " + wrk_dir + out_folder +
                        " " + raws + "*" + run_name + "*")
                 subprocess.check_call(cmd, shell=True)
         except IOError:
-            print("Error in run_kallisto_quant; the output file for " +\
-                  "{} already exists. Continuing with".format(out_folder) +\
+            print("Error in run_kallisto_quant; the output file for " +
+                  "{} already exists. Continuing with".format(out_folder) +
                   "previously generated file.")
 
 def main():
