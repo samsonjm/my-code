@@ -75,6 +75,15 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
 
 def main():
     """ Runs when the module is called. """
+    # Ensure the proper number of arguments, or prints usage."
+    if not len(argv) == 3:
+        print("Usage:\n" +
+              "arg1 - The directory containing the kallisto index\n" +
+              "arg2 - The directory containing the raw read files\n" +
+              "arg3 - The path/to/filename.ext of the run_name, " +
+              "file_name file")
+        raise TypeError
+
     # Define variables
     raw_files = "./seq_files"  # A file to hold raw read file names
     sample_names = {}  # A dictionary of filenames: samplenames
