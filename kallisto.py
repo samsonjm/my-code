@@ -13,13 +13,11 @@ argv[3] -- A .csv file with run_names, sample_names
 A kallisto index must be built before running the script.
 """
 
-### Import functions
 from sys import argv
 import re
 import subprocess
 import os.path
 
-### Definte Functions
 def gen_file_list(input_directory, output_file):
     """ Creates a file with the names of all the RNA-seq files.
 
