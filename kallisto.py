@@ -30,12 +30,10 @@ def gen_file_list(input_directory, output_file):
     try:
         if not os.path.exists(output_file):
             cmd = 'ls {}*.fastq* > {}'.format(input_directory, output_file)
+            subprocess.check_call(cmd, shell=True)
     except IOError:
         print("Error in gen_file_list; the file already exists. " +
               "\nContinuing with the previously-generated file")
-    else:
-        subprocess.check_call(cmd, shell=True)
-
 
 def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
     """ Runs kallisto quant on each raw read file.
@@ -63,20 +61,19 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws):
                 cmd = ("kallisto quant -t 20 -i {}".format(wrk_dir) +
                        "/411index --single "+
                        "-l 200 -s 30 -b 100 " +
-                       "-o {}".format(wrk_dir + out_folder) +
+                       "-o {}/{}".format(wrk_dir, out_folder) +
                        " {}*{}*".format(raws, run_name))
+                subprocess.check_call(cmd, shell=True)
         except IOError:
             print("Error in run_kallisto_quant; the output file for " +
                   "{} already exists. Continuing with".format(out_folder) +
                   "previously generated file.")
-        else:
-            subprocess.check_call(cmd, shell=True)
-
 
 def main():
     """ Runs when the module is called. """
     # Ensure the proper number of arguments, or prints usage."
-    if not len(argv) == 3:
+    if not len(argv) == 4:
+        print(len(argv))
         print("Usage:\n" +
               "arg1 - The directory containing the kallisto index\n" +
               "arg2 - The directory containing the raw read files\n" +
