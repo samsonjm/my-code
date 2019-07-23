@@ -6,13 +6,13 @@ Uses kallisto quant to pseudoalign raw RNA-Seq counts to
 a reference.
 
 A kallisto index must be built before running the script.
+This is often done using a cdna file.
 """
 
 from pathlib import Path
 import argparse
 import re
 import subprocess
-import os.path
 
 
 def argument_parser():
@@ -29,20 +29,20 @@ def argument_parser():
                                     "output folder.  The Araport11" +
                                     "_411_cdna.fasta file is typically " +
                                     "used for the index.")
-    arg1 = parser.add_argument("-o", "--output_folder",
+    output = parser.add_argument("-o", "--output_folder",
                                metavar="/PATH/TO/OUTPUT/",
                                help="The directory to output the " +
                                "psudoalignment to.",
                                default="/mnt/scratch/samso008/" +
                                "Project103470/kallisto/")
-    arg2 = parser.add_argument("-i", "--input_folder",
+    input_dir = parser.add_argument("-i", "--input_folder",
                                metavar="/PATH/TO/INPUT/",
                                help="The directory containing the raw read " +
                                "files.  These files should be in .fasta or " +
                                ".fasta.gz format.",
                                default="/mnt/scratch/samso008/" +
                                "Project103470/RawData/")
-    arg3 = parser.add_argument("-s", "--sample_names",
+    samples = parser.add_argument("-s", "--sample_names",
                                metavar="/PATH/TO/SAMPLE/FILE",
                                help="A tab-separated file containing, the " +
                                "first column being the file name of the " +
@@ -51,48 +51,47 @@ def argument_parser():
                                "should be in the following format: " +
                                "Construct_S(ample)Number_Time_Treatment.",
                                default="./samplenames.csv")
-    arg4 = parser.add_argument("-t", "--num_threads", metavar="#", type=int,
+    threads = parser.add_argument("-t", "--num_threads", metavar="#", type=int,
                                help="The number of threads to use when running " +
                                "kallisto quant.",
                                default=20)
     usage = parser.format_usage()
     parser.usage = usage
-    for argument in [arg1, arg2, arg3, arg4]:
+    for argument in [output, input_dir, samples, threads]:
         argument.metavar=""
     return parser.parse_args()
 
-def gen_file_list(input_directory, output_file):
-    """ Creates a file with the names of all the RNA-seq files.
+def generate_directory_file(input_directory, output_file):
+    """ Creates a file containing the names of all the RNA-seq files.
 
     Keyword Arguments:
-    input_directory -- (string) The /PATH/TO/DIRECTORY/ that the
+    input_directory -- (Path) The /PATH/TO/DIRECTORY/ that the
                        RNA-seq files are stored (in .fastq or
                        .fastq.gz format).
-    output_file -- (string) The /PATH/TO/FILE to output the
+    output_file -- (Path) The /PATH/TO/FILE to output the
                    RNA-seq filenames to.
     """
     try:
-        if not os.path.exists(output_file):
+        if not output_file.exists():
             cmd = f"ls {input_directory}*.fastq* > {output_file}"
             subprocess.check_call(cmd, shell=True)
     except IOError:
-        print("Error in gen_file_list; the file already exists. " +
+        print("Error in generate_directory_file; the file already exists. " +
               "\nContinuing with the previously-generated file")
 
 def run_kallisto_quant(wrk_dir, raw_file, conversion, raws, threads):
     """ Runs kallisto quant on each raw read file.
 
     Keyword Arguments:
-        wrk_dir -- (string) The /PATH/TO/DIRECTORY/ containing the
+        wrk_dir -- (Path) The /PATH/TO/DIRECTORY/ containing the
                    index.
-        raw_file -- (string) The /PATH/TO/FILE containing a list of raw
-                    read file names.
-                    conversion -- {(string)read_name:
-                                  (string)sample_name}
-                                  The raw read file name and the name to
-                                  change it to to make it more human
-                                  readable.
-        raws -- (string) The /PATH/TO/DIRECTORY with raw read files.
+        raw_file -- (sting iterator) The /PATH/TO/FILE containing a
+                    list of raw read file names.
+        conversion -- {(string)read_name:(string)sample_name}
+                      Dictionary containing the file name of the
+                      raw reads as the keys, and human
+                      readable file names as the values.
+        raws -- (Path) The /PATH/TO/DIRECTORY with raw read files.
         threads -- (int) The number of threads to use.
     """
     for line in raw_file:
@@ -102,7 +101,8 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws, threads):
         run_name = reg.group(2)
         out_folder = conversion[run_name]
         try:
-            if not os.path.exists(wrk_dir + out_folder):
+            folder = wrk_dir / out_folder
+            if not folder.exists():
                 # Standard deviation (-s 30) is from community forum
                 # posts.  Length is from "Protocol for use with NEBNext
                 # Ultra Directional RNA Library Prep Kit for Illumina".
@@ -113,7 +113,7 @@ def run_kallisto_quant(wrk_dir, raw_file, conversion, raws, threads):
                        "/411index --single " +
                        "-l 200 -s 30 -b 100 " +
                        f"-o {wrk_dir}/{out_folder}" +
-                       f" {raws}*{run_name}*")
+                       f" {raws}/*{run_name}*")
                 subprocess.check_call(cmd, shell=True)
         except IOError:
             print("Error in run_kallisto_quant; the output file for " +
@@ -126,13 +126,13 @@ def main():
     arguments = argument_parser()
     kallisto_dir = Path(arguments.output_folder)
     raw_dir = Path(arguments.input_folder)
-    conv_fille = Path(arguments.sample_names)
+    conv_file = Path(arguments.sample_names)
     quant_threads = arguments.num_threads
-    raw_files = "./seq_files"  # A file to hold raw read file names
+    raw_files = Path("./seq_files")  # A file to hold raw read file names
     sample_names = {}  # A dictionary of filenames: samplenames
 
     # Create a file holding the names of the raw file reads
-    gen_file_list(raw_dir, raw_files)
+    generate_directory_file(raw_dir, raw_files)
 
     # Fills the dictionary of run_names, sample_names
     with open(conv_file) as converter:
