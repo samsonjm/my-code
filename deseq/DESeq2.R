@@ -14,7 +14,7 @@ rm(list=ls())
 .libPaths("~/thesis/rlib")
 setwd("/mnt/scratch/samso008/Project103470/hisat2/images")
 count.data.file <- paste0("/mnt/scratch/samso008/Project103470/",
-													"hisat2/gene_count_matrix.csv"),
+			  "hisat2/gene_count_matrix.csv"),
 col.data.file  <- "/mnt/scratch/samso008/Project103470/hisat2/phenom.csv"
 tf <- "/mnt/scratch/samso008/Project103470/reference/Ath_TF_list"
 goi.file <- "/mnt/scratch/samso008/Project103470/hisat2/images/geneclusters.csv"
@@ -85,10 +85,10 @@ genDESeq <- function(count.matrix, column){
 	mx <- apply(count.matrix, 1, max)
 	count.matrix <- count.matrix[mx > 10, ]
 	dds <- DESeqDataSetFromMatrix(count.matrix[, order(colnames(count.matrix))],
-																column[order(rownames(column)), ],
-																~condition)
+				      column[order(rownames(column)), ],
+				      ~condition)
 	dds <- dds[, colnames(dds[, order(dds$construct, -rank(dds$condition), 
-																		dds$time)])]
+					  dds$time)])]
 	dds <- estimateSizeFactors(dds)
 	sizeFactors(dds)
 	dds <- estimateDispersions(dds)
@@ -110,9 +110,9 @@ genesToFilter <- function(filt.path, sleuth.object){
   # Note that the file containing the genes to be filtered needs a header, and
 	# the column with the genes to be filtered must be titled "ID".
 	filt <- read.table(file.path(filt.path), header = TRUE,
-										 stringsAsFactors = FALSE)
+			   stringsAsFactors = FALSE)
 	filt.short <- subset(filt, (filt$ID %in%
-											 names(sleuth.object$filter_bool)))
+				    names(sleuth.object$filter_bool)))
 	return(filt.short)
 }
 
@@ -151,7 +151,7 @@ createDiffList <- function(data.counts, data.columns, tfs, filename){
 		dds <- genDESeq(data.counts, data.columns)
 		dds.counts <- counts(dds, normalized = TRUE)
 		dds.dist <- as.dist(0.5 - 0.5 * (cor(t(dds.counts), method = "pearson")), 
-												diag = TRUE)
+				    diag = TRUE)
 		dds.fpm <- fpm(dds)
 		rld <- rlog(dds)
 		rld.dists <- dist(t(assay(rld)))
@@ -161,9 +161,9 @@ createDiffList <- function(data.counts, data.columns, tfs, filename){
 		tf <- (dds.counts[tf.table$Gene.ID, ])
 		tf.dist <- as.dist(0.5 - 0.5 * (cor(t(tf), method = "pearson")), diag = TRUE)
 		list.data <- list(dds, dds.counts, dds.fpm, dds.dist, rld, rld.dists, res, 
-											tf, tf.dist)
+				  tf, tf.dist)
 		names(list.data) <- c("dds", "dds.counts", "dds.fpm", "dds.dist", "rld", 
-													"rld.dists", "res", "tf", "tf.dist")
+				      "rld.dists", "res", "tf", "tf.dist")
 		print("List generation complete.  Writing to file...")
 		saveRDS(list.data, file=filename)
 		print("Write complete.")
@@ -261,7 +261,7 @@ addDataframeColumn <- function(regex, column.name, dataframe) {
 	matches <- regmatches(dataframe$sample, regex.result)
 	dataframe[[column.name]] <- matches
 	dataframe[[column.name]] <- factor(dataframe[[column.name]],
-																		 levels = unique(dataframe[[column.name]]))
+					   levels = unique(dataframe[[column.name]]))
 	return(dataframe)
 }
 
@@ -295,64 +295,64 @@ genClusterPatternFile <- function(dds.fpm, cutoff, prefix, aes.group,
 	#   prefix: (character) The prefix for the file names.
 	#   aes.group: (character) The type of aesthetic grouping (genotype, average, all).
 	#		list.hc: (hclust) A hierarchical cluster of the dds.fpm from genHC.
-  par(mfrow = c(1, 1), mgp = c(3, 0.5, 0), mar = c(5, 3, 0.75, 0.5), tck =
-  		-0.025, omi = c(0.1, 0.5, 0.5, 0.1))
+  par(mfrow = c(1, 1), mgp = c(3, 0.5, 0), mar = c(5, 3, 0.75, 0.5), 
+      tck = -0.025, omi = c(0.1, 0.5, 0.5, 0.1))
   par(las = 2)
   pdf(file = paste0(prefix, aes.group, "patterns_", cutoff, "-", Sys.Date(),
-			".pdf"), 12, 8)
-	print("Entering loop")
+		    ".pdf"), 12, 8)
+  print("Entering loop")
   for (loop in as.integer(names(sort(table(list.hc), 
-			                               decr = T)))) {
+			             decr = T)))) {
   	ids <- names(list.hc)[list.hc == loop]
-		df.new <- createClusterDataframe(dds.fpm, ids)
-		print("Data frame created, checking for >1 member")
+	df.new <- createClusterDataframe(dds.fpm, ids)
+	print("Data frame created, checking for >1 member")
   	if(ncol(df.new) <= 1){
   		break
   	}
 
-		sample.condition <- paste0(df.new$genotype, df.new$cond)
-		df.new$condition <- sample.condition
-		df.new$condition <- factor(df.new$condition, 
-															 levels = unique(df.new$condition))
+	sample.condition <- paste0(df.new$genotype, df.new$cond)
+	df.new$condition <- sample.condition
+	df.new$condition <- factor(df.new$condition, 
+				   levels = unique(df.new$condition))
 
-		print("Factoring complete, setting plot.x type")
-		if (aes.group == "average"){
-			plot.group <- 1
-			plot.x <- df.new$condition
-			group.means <- df.new %>% 
-				group_by(condition) %>%
-				summarize(mean_z = mean(z_score))
-			df.new$zmeans <- group.means$mean_z[
-														group.means$condition[df.new$condition]]
-		}
-		else if (aes.group == "genotype") {
-			plot.group <- df.new$genotype
-			plot.x <- df.new$cond
-			group.means <- df.new %>% 
-				group_by(cond) %>%
-				summarize(mean_z = mean(z_score))
-			df.new$zmeans <- group.means$mean_z[group.means$cond[df.new$cond]]
-		}
-	  else {
-			plot.group <- df.new$gene
-			plot.x <- df.new$condition
-			group.means <- df.new %>% 
-				group_by(condition) %>%
-				summarize(mean_z = mean(z_score))
-			df.new$zmeans <-
-				group.means$mean_z[group.means$condition[df.new$condition]]
-		}
+	print("Factoring complete, setting plot.x type")
+	if (aes.group == "average"){
+		plot.group <- 1
+		plot.x <- df.new$condition
+		group.means <- df.new %>% 
+			       group_by(condition) %>%
+			       summarize(mean_z = mean(z_score))
+		df.new$zmeans <- group.means$mean_z[
+				 group.means$condition[df.new$condition]]
+	}
+	else if (aes.group == "genotype") {
+		plot.group <- df.new$genotype
+		plot.x <- df.new$cond
+		group.means <- df.new %>% 
+			       group_by(cond) %>%
+			       summarize(mean_z = mean(z_score))
+		df.new$zmeans <- group.means$mean_z[group.means$cond[df.new$cond]]
+	}
+	else {
+		plot.group <- df.new$gene
+		plot.x <- df.new$condition
+		group.means <- df.new %>% 
+			       group_by(condition) %>%
+			       summarize(mean_z = mean(z_score))
+		df.new$zmeans <- group.means$mean_z[
+			         group.means$condition[df.new$condition]]
+	}
 
-		print("Printing ggplot to file")
+	print("Printing ggplot to file")
   	print(ggplot(df.new, aes(x = plot.x, sample, y = z_score, 
-														 group = plot.group, color = genotype)) +
-					geom_point() + 
-					ylim(-5, 8) +
-  				theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  				labs(title = paste(prefix, " cluster", loop, ", size:", length(ids))) + 
-  				theme(legend.position = "none") +
-					geom_line(aes(y = zmeans, group = plot.group)))
-		print("Print complete, restarting loop")
+				 group = plot.group, color = genotype)) +
+				 geom_point() + 
+				 ylim(-5, 8) +
+  				 theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  				 labs(title = paste(prefix, " cluster", loop, ", size:", length(ids))) + 
+  				 theme(legend.position = "none") +
+				 geom_line(aes(y = zmeans, group = plot.group)))
+	print("Print complete, restarting loop")
   }
   dev.off()
 }
@@ -370,43 +370,43 @@ findGOTerms <- function(dds.fpm, cutoff, prefix, list.hc) {
 	sink(filename)
 	options("width"=10000)
 	mart <- biomaRt::useMart(biomart = "plants_mart", 
-														dataset = "athaliana_eg_gene",
-														host = "plants.ensembl.org")
+				 dataset = "athaliana_eg_gene",
+				 host = "plants.ensembl.org")
 	GTOGO <- biomaRt::getBM(attributes = c("ensembl_gene_id", "go_id"), 
-													mart = mart)
+				mart = mart)
 	GTOGO <- GTOGO[GTOGO$go_id != '', ]  # Removes blank entries
 	geneID2GO <- by(GTOGO$go_id,
-									GTOGO$ensembl_gene_id,
-									function(x) as.character(x))
+			GTOGO$ensembl_gene_id,
+			function(x) as.character(x))
 	all.genes <- sort(unique(as.character(GTOGO$ensembl_gene_id)))
 	all.genes <- all.genes[all.genes %in% rownames(dds.fpm)]
   for (loop in as.integer(names(sort(table(list.hc), 
-			                               decr = T)))) {
+       decr = T)))) {
   	ids <- names(list.hc)[list.hc == loop]
-		# df.new <- createClusterDataframe(dds.fpm, ids)
-		int.genes <- factor(as.integer(all.genes %in% ids))
-		names(int.genes) <- all.genes
-		
-		go.obj <- new("topGOdata", ontology = 'BP',
-									allGenes = int.genes,
-									annot = annFUN.gene2GO,
-									gene2GO = geneID2GO)
-		result <- runTest(go.obj, algorithm = "elim", statistic = "fisher")
-		results.tab <- GenTable(object = go.obj, elimFisher = result, topNodes = 10)
+	# df.new <- createClusterDataframe(dds.fpm, ids)
+	int.genes <- factor(as.integer(all.genes %in% ids))
+	names(int.genes) <- all.genes
 
-		#Create a map of geneIDs to GO terms
-		ann.genes <- genesInTerm(go.obj)
-		
-		# Get multiple testing correction values (In progress)
-		results.tab['multTestCorr'] = p.adjust(results.tab$elimFisher, method="fdr")
+	go.obj <- new("topGOdata", ontology = 'BP',
+		      allGenes = int.genes,
+		      annot = annFUN.gene2GO,
+		      gene2GO = geneID2GO)
+	result <- runTest(go.obj, algorithm = "elim", statistic = "fisher")
+	results.tab <- GenTable(object = go.obj, elimFisher = result, topNodes = 10)
 
-		#Select a few GO terms from the Fisher analysis
-		fisher.go <- names(sort(score(result)))[1:10]
-		fisher.ann.genes <- genesInTerm(go.obj, whichGO=fisher.go)
-		fisher.ann.genes
-		fisher.ann.genes <- data.frame(GO.ID = names(fisher.ann.genes), loci =
-																	 I(fisher.ann.genes))
-		results.tab = merge(x = results.tab, y = fisher.ann.genes)
+	#Create a map of geneIDs to GO terms
+	ann.genes <- genesInTerm(go.obj)
+		
+	# Get multiple testing correction values (In progress)
+	results.tab['multTestCorr'] = p.adjust(results.tab$elimFisher, method="fdr")
+
+	#Select a few GO terms from the Fisher analysis
+	fisher.go <- names(sort(score(result)))[1:10]
+	fisher.ann.genes <- genesInTerm(go.obj, whichGO=fisher.go)
+	fisher.ann.genes
+	fisher.ann.genes <- data.frame(GO.ID = names(fisher.ann.genes), loci =
+				       (fisher.ann.genes))
+	results.tab = merge(x = results.tab, y = fisher.ann.genes)
 
 		### Use getPvalues() to adjust.
 		print(paste("Cluster:", loop, " Number of genes:", length(ids)))
@@ -419,7 +419,7 @@ findGOTerms <- function(dds.fpm, cutoff, prefix, list.hc) {
 }
 
 plotGOIClusters <- function(dds.fpm, cutoff, prefix, list.hc, 
-														interesting.genes) {
+			    interesting.genes) {
 	# Creates a .pdf of the clustering patterns for the given dds.
 	#
 	# Keyword Arguments:
@@ -429,45 +429,45 @@ plotGOIClusters <- function(dds.fpm, cutoff, prefix, list.hc,
 	#		list.hc: (hclust) A hierarchical cluster of the dds.list from genHC.
 	#		interesting.genes: (list) The genes to plot.
   par(mfrow = c(1, 1), mgp = c(3, 0.5, 0), mar = c(5, 3, 0.75, 0.5), tck =
-  		-0.025, omi = c(0.1, 0.5, 0.5, 0.1))
+      -0.025, omi = c(0.1, 0.5, 0.5, 0.1))
   par(las = 2)
   pdf(file = paste0(prefix, "goi_patterns_", cutoff, "-", Sys.Date(),
-			".pdf"), 12, 8)
-	print("Entering loop")
+		    ".pdf"), 12, 8)
+  print("Entering loop")
   for (loop in as.integer(names(sort(table(list.hc), 
-			                               decr = T)))) {
+			             decr = T)))) {
   	ids <- names(list.hc)[list.hc == loop]
-		df.new <- createClusterDataframe(dds.fpm, ids)
-		for (geneofinterest in interesting.genes$Locus) {
-			if (geneofinterest %in% df.new$gene) {
-				group.means <- df.new %>% 
-					group_by(cond) %>%
-					summarize(mean_z = mean(z_score))
-				df.new$zmeans <- group.means$mean_z[group.means$cond[df.new$cond]]
+	df.new <- createClusterDataframe(dds.fpm, ids)
+	for (geneofinterest in interesting.genes$Locus) {
+		if (geneofinterest %in% df.new$gene) {
+			group.means <- df.new %>% 
+				       group_by(cond) %>%
+				       summarize(mean_z = mean(z_score))
+			df.new$zmeans <- group.means$mean_z[group.means$cond[df.new$cond]]
 
-				average.goi <- subset(df.new, gene %in% geneofinterest) %>%
-					group_by(cond) %>%
-					summarize(mean_gene = mean(z_score))
-				df.new$genemeans <-
-					average.goi$mean_gene[average.goi$cond[df.new$cond]]
+			average.goi <- subset(df.new, gene %in% geneofinterest) %>%
+				       group_by(cond) %>%
+				       summarize(mean_gene = mean(z_score))
+			df.new$genemeans <-
+				average.goi$mean_gene[average.goi$cond[df.new$cond]]
 
   			print(ggplot(df.new, aes(x = cond, sample, y = z_score, 
-																 group = genotype, color = genotype)) +
-							geom_point() + 
- 							geom_point(data = subset(df.new, gene %in% geneofinterest),
-													color = "blue", size = 2) +
-							ylim(-5, 8) +
-  						theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
-  						labs(title = paste(prefix, 
-																 interesting.genes$Name[interesting.genes$Locus
-																												%in% geneofinterest],
-																 "size:", length(ids))) + 
-  						theme(legend.position = "none") +
-							geom_line(aes(y = zmeans), size=1) + 
-							geom_line(data = subset(df.new, gene %in% geneofinterest),
-												aes(y = genemeans), color = "blue", size = 1.5))
-			}
+						 group = genotype, color = genotype)) +
+						 geom_point() + 
+ 						 geom_point(data = subset(df.new, gene %in% geneofinterest),
+							    color = "blue", size = 2) +
+						 ylim(-5, 8) +
+  						 theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+  					         labs(title = paste(prefix, 
+								    interesting.genes$Name[interesting.genes$Locus
+											   %in% geneofinterest],
+								    "size:", length(ids))) + 
+  						 theme(legend.position = "none") +
+						 geom_line(aes(y = zmeans), size=1) + 
+						 geom_line(data = subset(df.new, gene %in% geneofinterest),
+							   aes(y = genemeans), color = "blue", size = 1.5))
 		}
+	}
   }
   dev.off()
 }
@@ -501,8 +501,8 @@ writeHeatmap <- function(dds.matrix) {
 	# Note: Issues have been found when attempting to create a heatmap on the
 	# whole sample size with the sleuth pipeline, so do not attempt.
 	heat <- heatmap(dds.matrix[rownames(dds.matrix), ], scale = 'column', 
-									Rowv = NA, labCol = FALSE, main = paste("Heatmap for ",
-									deparse(substitute(dds.matrix)), " sorted by condition"))
+			Rowv = NA, labCol = FALSE, main = paste("Heatmap for ",
+			deparse(substitute(dds.matrix)), " sorted by condition"))
 	return(heat)
 }
 
@@ -519,9 +519,9 @@ makeNetworkFiles <- function(cur.list, counting.data, column.data) {
 	# Contreras-Lopez et al, 2018.
 	res <- na.exclude(as.data.frame(cur.list$res))
 	filtered <- res[(abs(res$log2FoldChange)>1 & res$padj<0.01), ]
-	write.table(filtered, 
-							paste0(deparse(substitute(cur.list)), "regulated.txt"), 
-							quote = F, sep = "\t", col.names = NA)
+	write.table(filtered, paste0(deparse(substitute(cur.list)), 
+				     	     "regulated.txt"), 
+				     quote = F, sep = "\t", col.names = NA)
 	norm.data <- getNormalizedMat(counting.data, MedianNorm(counting.data))
 	norm.data.log <- log2(norm.data+1)
 	norm.interest <-norm.data.log[rownames(filtered), ]
@@ -533,13 +533,13 @@ makeNetworkFiles <- function(cur.list, counting.data, column.data) {
 	cor.table <- na.exclude(cbind(correlation, pval.adj))[, c(1,2,3,6)]
 	colnames(cor.table) <- c("gene1", "gene2", "cor", "p.adj")
 	cor.table.filt <- cor.table[(abs(cor.table[, 3]) > 0.9 & 
-															 cor.table[, 4] < 0.01), ]
+				     cor.table[, 4] < 0.01), ]
 	p.adj <- cor.table.filt[, 4]
 	p.adj[p.adj == 0] <- as.numeric(unlist(format(.Machine)))[1]
 	cor.table.filt <- cbind(cor.table.filt, log10(p.adj))
 	write.table(cor.table.filt, 
-							paste0(deparse(substitute(cur.list)), "cor.table.filter.txt"), 
-							sep = "\t", row.names = F, quote = F)
+		    paste0(deparse(substitute(cur.list)), "cor.table.filter.txt"), 
+		    sep = "\t", row.names = F, quote = F)
 	g <- graph.data.frame(cor.table.filt[, 1:2], directed = FALSE)
 	degrees <- degree(g)
 	betweennesses <- betweenness(g)
@@ -547,8 +547,8 @@ makeNetworkFiles <- function(cur.list, counting.data, column.data) {
 	rank.stat <- rowMeans(cbind(rank(node.nw.st[, 1]), rank(node.nw.st[, 2])))
 	node.nw.st <- cbind(node.nw.st, rank.stat)
 	write.table(node.nw.st, 
-							file = paste0(deparse(substitute(cur.list)), "node.nw.st.txt"), 
-							sep = "\t", col.names = NA, quote = F)
+		    file = paste0(deparse(substitute(cur.list)), "node.nw.st.txt"), 
+		    sep = "\t", col.names = NA, quote = F)
 }
 
 confirmPipelines <- function(sleuthData, deseqFPM) {
@@ -562,8 +562,8 @@ confirmPipelines <- function(sleuthData, deseqFPM) {
 	merged <- merge(sleuthData, deseqFPM, by="row.names", all=F)
 	midway = as.integer(length(colnames(merged))/2 + 1)
 	corr <- Hmisc::rcorr(unlist(merged[2:midway]),
-											 unlist(merged[(midway+1):length(colnames(merged))]), 
-											 type="pearson")
+			     unlist(merged[(midway+1):length(colnames(merged))]), 
+			     type="pearson")
 	return(corr)
 }
 
@@ -623,48 +623,48 @@ makeNetworkFiles(x401, count.data.401, col.data.401)
 # 411 + Col0 Shoot Data
 count.data.411shoot <- (count.data[, !colnames(count.data) %like% "Han"])
 count.data.411shoot <- (count.data.411shoot[, !colnames(count.data.411shoot) %like%
-											 	"PLT"])
+					    PLT"])
 count.data.411shoot <- (count.data.411shoot[, !colnames(count.data.411shoot) %like%
-												"401"])
+					    "401"])
 col.data.411shoot <- (col.data[!rownames(col.data) %like% "Han", ])
 col.data.411shoot <- (col.data.411shoot[!rownames(col.data.411shoot) %like%
-											 	"PLT", ])
+				        "PLT", ])
 col.data.411shoot <- (col.data.411shoot[!rownames(col.data.411shoot) %like% 
-											"401", ])
+				        "401", ])
 x411shoot <- createDiffList(count.data.411shoot, col.data.411shoot, tf.file,
-														"x411shoot.deseq")
+			    "x411shoot.deseq")
 ct <- 0.666
 x411shootclusterfilename <- genClusterPatterns(x411shoot$dds.dist,
-																							 x411shoot$dds.fpm, 
-																							 ct, "411shoot", goi)
+					       x411shoot$dds.fpm, 
+					       ct, "411shoot", goi)
 ct <- 0.442
 x411shoottfclusterfilename <- genClusterPatterns(x411shoot$tf.dist,
-																								 x411shoot$tf, ct,
-																								 "411shoottf", goi)
+						 x411shoot$tf, ct,
+						 "411shoottf", goi)
 genPDF(x411shoot, "411shoot")
 makeNetworkFiles(x411shoot, count.data.411shoot, col.data.411shoot)
 
 # 401 + Col0 Shoot Data
 count.data.401shoot <- (count.data[, !colnames(count.data) %like% "Han"])
 count.data.401shoot <- (count.data.401shoot[, !colnames(count.data.401shoot) %like%
-											 	"PLT"])
+					    "PLT"])
 count.data.401shoot <- (count.data.401shoot[, !colnames(count.data.401shoot) %like%
-												"411"])
+					    "411"])
 col.data.401shoot <- (col.data[!rownames(col.data) %like% "Han", ])
 col.data.401shoot <- (col.data.401shoot[!rownames(col.data.401shoot) %like% 
-											"PLT", ])
+					"PLT", ])
 col.data.401shoot <- (col.data.401shoot[!rownames(col.data.401shoot) %like% 
-											"411", ])
+					"411", ])
 x401shoot <- createDiffList(count.data.401shoot, col.data.401shoot, tf.file,
-														"x401shoot.deseq")
+			    "x401shoot.deseq")
 ct <- 0.649
 x401shootclusterfilename <- genClusterPatterns(x401shoot$dds.dist,
-																							 x401shoot$dds.fpm, 
-																							 ct, "401shoot", goi)
+					       x401shoot$dds.fpm, 
+					       ct, "401shoot", goi)
 ct <- 0.416
 x401shoottfclusterfilename <- genClusterPatterns(x401shoot$tf.dist,
-																									x401shoot$tf, ct,
-																									"401shoottf", goi)
+						 x401shoot$tf, ct,
+						 "401shoottf", goi)
 genPDF(x401shoot, "401shoot")
 makeNetworkFiles(x401shoot, count.data.401shoot, col.data.401shoot)
 
@@ -676,13 +676,13 @@ col.data.exp <- (col.data[!rownames(col.data) %like% "Han", ])
 col.data.exp <- (col.data.exp[!rownames(col.data.exp) %like% "PLT", ])
 col.data.exp <- (col.data.exp[!rownames(col.data.exp) %like% "Col", ])
 experim <- createDiffList(count.data.exp, col.data.exp, tf.file,
-													"experim.deseq")
+			  "experim.deseq")
 ct <- 0.649
 experimclusterfilename <- genClusterPatterns(experim$dds.dist, experim$dds.fpm, 
-																						 ct, "exp", goi)
+					     ct, "exp", goi)
 ct <- 0.477
 experimtfclusterfilename <- genClusterPatterns(experim$tf.dist, experim$tf, ct,
-																								"exptf", goi)
+					       "exptf", goi)
 genPDF(experim, "exp")
 makeNetworkFiles(experim, count.data.exp, col.data.exp)
 
